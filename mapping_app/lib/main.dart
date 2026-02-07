@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:geolocator/geolocator.dart';
 
 void main() {
-  runApp(const CropSureApp());
+  runApp(const MyApp());
 }
-class CropSureApp extends StatelessWidget {
-  const CropSureApp({super.key});
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CropSure Land Mapping',
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const MapScreen(),
+      home: MapScreen(),
     );
   }
 }
@@ -27,135 +27,65 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  LatLng? currentLocation;
-  final List<LatLng> landPoints = [];
+  LatLng _center = LatLng(20.5937, 78.9629); // India default
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    _getLocation();
   }
 
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enable location services")),
-      );
-      return;
-    }
+  Future<void> _getLocation() async {
+    LocationPermission permission;
 
-    LocationPermission permission = await Geolocator.checkPermission();
+    permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return;
-      }
     }
 
     if (permission == LocationPermission.deniedForever) {
+      setState(() => _loading = false);
       return;
     }
 
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
+    Position position = await Geolocator.getCurrentPosition();
     setState(() {
-      currentLocation = LatLng(position.latitude, position.longitude);
+      _center = LatLng(position.latitude, position.longitude);
+      _loading = false;
     });
-  }
-
-
-  void _addPoint(LatLng point) {
-    setState(() {
-      landPoints.add(point);
-    });
-  }
-
-  void _saveLand() {
-    DateTime now = DateTime.now();
-
-    for (var point in landPoints) {
-      print({
-        "latitude": point.latitude,
-        "longitude": point.longitude,
-        "timestamp": now.toIso8601String()
-      });
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Land coordinates saved (console)")),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Map Farmer Land"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: landPoints.length >= 3 ? _saveLand : null,
-          )
-        ],
-      ),
-      body: currentLocation == null
-          ? const Center(child: CircularProgressIndicator())
-          : FlutterMap(
+      appBar: AppBar(title: const Text("OSM Map")),
+      body: FlutterMap(
         options: MapOptions(
-          center: currentLocation!,
-          zoom: 17,
-          onTap: (tapPosition, point) => _addPoint(point),
+          center: _center,
+          zoom: 15,
         ),
         children: [
           TileLayer(
-            urlTemplate:
-            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-            subdomains: const ['a', 'b', 'c'],
+            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            userAgentPackageName: 'com.example.mapping_app',
           ),
-
-          // Farmer location
           MarkerLayer(
             markers: [
               Marker(
-                point: currentLocation!,
+                point: _center,
                 width: 40,
                 height: 40,
-                child: const Icon(Icons.person_pin_circle,
-                    color: Colors.blue, size: 40),
+                child: const Icon(Icons.location_pin, color: Colors.red, size: 40),
               ),
             ],
           ),
-
-          // Land boundary points
-          MarkerLayer(
-            markers: landPoints
-                .map(
-                  (point) => Marker(
-                point: point,
-                width: 20,
-                height: 20,
-                child: const Icon(Icons.location_on,
-                    color: Colors.red, size: 20),
-              ),
-            )
-                .toList(),
-          ),
-
-          // Polygon
-          if (landPoints.length >= 3)
-            PolygonLayer(
-              polygons: [
-                Polygon(
-                  points: landPoints,
-                  color: Colors.green.withOpacity(0.3),
-                  borderStrokeWidth: 3,
-                  borderColor: Colors.green,
-                ),
-              ],
-            ),
         ],
       ),
     );
