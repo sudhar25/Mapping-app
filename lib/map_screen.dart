@@ -23,21 +23,44 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _getLocation() async {
-    Position position = await Geolocator.getCurrentPosition();
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
     setState(() {
-      currentLocation = LatLng(position.latitude, position.longitude);
+      currentLocation =
+          LatLng(position.latitude, position.longitude);
     });
   }
 
   void _saveLand() {
-    // SEND THIS TO BACKEND API
-    print("Farmer ID: ${widget.farmerId}");
+    debugPrint("Farmer ID: ${widget.farmerId}");
     for (var p in landPoints) {
-      print("${p.latitude}, ${p.longitude}");
+      debugPrint("Lat: ${p.latitude}, Lng: ${p.longitude}");
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Land saved successfully")),
+      const SnackBar(content: Text("Land saved (console only)")),
     );
   }
 
@@ -69,31 +92,36 @@ class _MapScreenState extends State<MapScreen> {
         ),
         children: [
           TileLayer(
-            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            urlTemplate:
+            "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             userAgentPackageName: 'com.example.mapping_app',
           ),
-
           MarkerLayer(
             markers: [
               Marker(
                 point: currentLocation!,
                 width: 40,
                 height: 40,
-                child: const Icon(Icons.person_pin_circle,
-                    color: Colors.blue, size: 40),
+                child: const Icon(
+                  Icons.person_pin_circle,
+                  color: Colors.blue,
+                  size: 40,
+                ),
               ),
               ...landPoints.map(
                     (p) => Marker(
                   point: p,
                   width: 20,
                   height: 20,
-                  child: const Icon(Icons.location_on,
-                      color: Colors.red, size: 20),
+                  child: const Icon(
+                    Icons.location_on,
+                    color: Colors.red,
+                    size: 20,
+                  ),
                 ),
-              )
+              ),
             ],
           ),
-
           if (landPoints.length >= 3)
             PolygonLayer(
               polygons: [
