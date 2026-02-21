@@ -12,9 +12,10 @@ class LoginScreen extends StatelessWidget {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => FarmerHomeScreen(
-            farmerId: "FARMER_001",
-          ),
+          builder: (_) =>
+              FarmerHomeScreen(
+                farmerId: "FARMER_001",
+              ),
         ),
       );
     }
@@ -23,31 +24,96 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Farmer Login",
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 30),
-            TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: "Phone Number",
-                border: OutlineInputBorder(),
+      body: Stack(
+        children: [
+          // 🌾 Background Image
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/images/farmer.jpeg"),
+                fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => login(context),
-              child: const Text("Login"),
+          ),
+
+          // 🌿 Green overlay for readability
+          Container(
+            color: Colors.green.withOpacity(0.6),
+          ),
+
+          // 🧾 Login Card
+          Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Card(
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.agriculture,
+                          size: 60,
+                          color: Colors.green,
+                        ),
+                        const SizedBox(height: 10),
+
+                        const Text(
+                          "Farmer Login",
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          maxLength: 10,
+                          decoration: InputDecoration(
+                            labelText: "Phone Number",
+                            prefixIcon: const Icon(Icons.phone),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () => login(context),
+                            child: const Text(
+                              "Login",
+                              style: TextStyle(fontSize: 18),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
