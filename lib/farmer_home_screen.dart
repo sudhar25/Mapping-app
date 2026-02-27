@@ -85,7 +85,7 @@ class FarmerHomeScreen extends StatelessWidget {
                         color: Colors.green,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 20),
                     Text("• Walk around your land boundary"),
                     Text("• Tap the map at each corner point"),
                     Text("• Minimum 3 points required"),

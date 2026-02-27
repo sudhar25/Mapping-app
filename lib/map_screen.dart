@@ -56,14 +56,16 @@ class _MapScreenState extends State<MapScreen> {
 
     positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.best,
+        accuracy: LocationAccuracy.bestForNavigation,
         distanceFilter: 5, // meters
       ),
     ).listen((Position pos) {
       setState(() {
         LatLng point = LatLng(pos.latitude, pos.longitude);
-        landPoints.add(point);
-        currentLocation = point;
+        setState(() {
+          currentLocation = point;
+
+        });
       });
     });
   }
