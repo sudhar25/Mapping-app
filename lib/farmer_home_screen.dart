@@ -22,7 +22,7 @@ class FarmerHomeScreen extends StatelessWidget {
           SizedBox(
           height: 80,
           child: Image.asset(
-            'assets/images/logo.png',
+            'assets/images/logo.jpeg',
             fit: BoxFit.contain,
           ),
         ),

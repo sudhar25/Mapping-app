@@ -16,11 +16,11 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  // 🔹 Controllers
+  // Controllers
   final TextEditingController cropController = TextEditingController();
   final TextEditingController insuranceController = TextEditingController();
 
-  // 🔹 Location & mapping
+  // Mapping state
   LatLng? currentLocation;
   List<LatLng> landPoints = [];
   bool isMapping = false;
@@ -57,15 +57,24 @@ class _MapScreenState extends State<MapScreen> {
     positionStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 5, // meters
+        distanceFilter: 5,
       ),
     ).listen((Position pos) {
-      setState(() {
-        LatLng point = LatLng(pos.latitude, pos.longitude);
-        setState(() {
-          currentLocation = point;
+      LatLng point = LatLng(pos.latitude, pos.longitude);
 
-        });
+      setState(() {
+        currentLocation = point;
+
+        // ✅ ADD POINTS WHILE WALKING
+        if (landPoints.isEmpty ||
+            Distance().as(
+              LengthUnit.Meter,
+              landPoints.last,
+              point,
+            ) >
+                3) {
+          landPoints.add(point);
+        }
       });
     });
   }
@@ -76,7 +85,7 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {});
   }
 
-  // ================= AREA CALCULATION =================
+  // ================= AREA =================
   double calculateAreaHectare(List<LatLng> points) {
     if (points.length < 3) return 0;
 
@@ -94,7 +103,7 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     area = area * earthRadius * earthRadius / 2;
-    return area.abs() / 10000; // hectares
+    return area.abs() / 10000;
   }
 
   double get areaHectare => calculateAreaHectare(landPoints);
@@ -127,41 +136,35 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F8E9),
       appBar: AppBar(
         backgroundColor: Colors.green.shade700,
         title: const Text("Walk & Map Land"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
-
       body: Column(
         children: [
-          // Instructions
           Padding(
             padding: const EdgeInsets.all(8),
-            child: Card(
-              color: Colors.green.shade50,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  isMapping
-                      ? "🚶 Walk around your land. Points are auto recorded."
-                      : "▶ Press START and walk around boundary",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
+            child: Text(
+              isMapping
+                  ? "🚶 Walk or tap map to add points"
+                  : "▶ Tap map for first point or press START",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
 
-          // Map
+          // MAP
           Expanded(
             child: FlutterMap(
               options: MapOptions(
                 center: currentLocation!,
                 zoom: 17,
+                onTap: (_, LatLng point) {
+                  if (!isMapping) {
+                    setState(() {
+                      landPoints.add(point);
+                    });
+                  }
+                },
               ),
               children: [
                 TileLayer(
@@ -169,6 +172,8 @@ class _MapScreenState extends State<MapScreen> {
                   "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
                   userAgentPackageName: 'com.example.mapping_app',
                 ),
+
+                // Current location
                 MarkerLayer(
                   markers: [
                     Marker(
@@ -178,8 +183,21 @@ class _MapScreenState extends State<MapScreen> {
                       child: const Icon(Icons.person_pin_circle,
                           color: Colors.blue, size: 40),
                     ),
+
+                    // ✅ Land points markers
+                    ...landPoints.map(
+                          (p) => Marker(
+                        point: p,
+                        width: 20,
+                        height: 20,
+                        child: const Icon(Icons.circle,
+                            size: 10, color: Colors.red),
+                      ),
+                    ),
                   ],
                 ),
+
+                // Polygon
                 if (landPoints.length >= 3)
                   PolygonLayer(
                     polygons: [
@@ -195,7 +213,6 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
 
-          // Area + form
           if (landPoints.length >= 3)
             Padding(
               padding: const EdgeInsets.all(10),
