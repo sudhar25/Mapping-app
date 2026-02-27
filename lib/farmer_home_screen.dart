@@ -19,10 +19,13 @@ class FarmerHomeScreen extends StatelessWidget {
         ),
         title: Row(
           children: [
-            Image.asset(
-              "assets/images/logo.jpeg", // <-- your logo
-              height: 32,
-            ),
+          SizedBox(
+          height: 80,
+          child: Image.asset(
+            'assets/images/logo.png',
+            fit: BoxFit.contain,
+          ),
+        ),
             const SizedBox(width: 10),
             const Text("Farmer Dashboard"),
           ],
@@ -31,7 +34,7 @@ class FarmerHomeScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Farmer info card
             Card(
@@ -42,7 +45,7 @@ class FarmerHomeScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Text(
                       "Farmer Details",
@@ -75,7 +78,7 @@ class FarmerHomeScreen extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: const [
                     Text(
                       "📌 Mapping Instructions",

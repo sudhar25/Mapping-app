@@ -232,7 +232,7 @@ class _MapScreenState extends State<MapScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(10),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             ElevatedButton(
               onPressed: isMapping ? null : startMapping,
