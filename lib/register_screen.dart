@@ -1,28 +1,38 @@
 import 'package:flutter/material.dart';
 import 'farmer_home_screen.dart';
-import 'register_screen.dart';
 import '../services/api_service.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  Future<void> login() async {
+  Future<void> register() async {
+    final name = nameController.text.trim();
     final email = emailController.text.trim();
+    final phone = phoneController.text.trim();
     final password = passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (name.isEmpty || email.isEmpty || phone.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter email and password')),
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    if (phone.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid 10-digit phone number')),
       );
       return;
     }
@@ -30,22 +40,25 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await ApiService.login(
+      final response = await ApiService.register(
         email: email,
+        fullName: name,
         password: password,
+        phone: phone,
       );
 
-      // Parse exactly from your LoginResponse shape
+      // Same LoginResponse shape as login
       final user = response['user'];
       final tokens = response['tokens'];
 
       final int farmerId = user['id'];
-      final String farmerName = user['full_name'] ?? 'Farmer';
+      final String farmerName = user['full_name'] ?? name;
       final String accessToken = tokens['access_token'];
 
       if (!mounted) return;
 
-      Navigator.pushReplacement(
+      // After register → go directly to dashboard (already logged in)
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
           builder: (_) => FarmerHomeScreen(
@@ -54,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
             accessToken: accessToken,
           ),
         ),
+            (route) => false, // clear entire stack
       );
     } catch (e) {
       if (!mounted) return;
@@ -95,17 +109,27 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.agriculture,
+                        const Icon(Icons.person_add,
                             size: 60, color: Colors.green),
                         const SizedBox(height: 10),
-                        const Text("Farmer Login",
+                        const Text("Farmer Registration",
                             style: TextStyle(
-                                fontSize: 26,
+                                fontSize: 24,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green)),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 24),
 
-                        // Email
+                        TextField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: "Full Name",
+                            prefixIcon: const Icon(Icons.person),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
                         TextField(
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -116,9 +140,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
-                        // Password
+                        TextField(
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          maxLength: 10,
+                          decoration: InputDecoration(
+                            labelText: "Phone Number",
+                            prefixIcon: const Icon(Icons.phone),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
                         TextField(
                           controller: passwordController,
                           obscureText: _obscurePassword,
@@ -138,7 +174,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Login button
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -148,27 +183,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12)),
                             ),
-                            onPressed: _isLoading ? null : login,
+                            onPressed: _isLoading ? null : register,
                             child: _isLoading
                                 ? const CircularProgressIndicator(
                                 color: Colors.white)
-                                : const Text("Login",
+                                : const Text("Register",
                                 style: TextStyle(fontSize: 18)),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
-                        // Go to register
                         TextButton(
-                          onPressed: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const RegisterScreen()),
-                          ),
-                          child: const Text(
-                            "New farmer? Register here",
-                            style: TextStyle(color: Colors.green),
-                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Already registered? Login",
+                              style: TextStyle(color: Colors.green)),
                         ),
                       ],
                     ),
