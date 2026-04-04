@@ -6,10 +6,78 @@ import '../constants.dart';
 class ApiService {
   static const String _baseUrl = AppConstants.baseUrl;
 
-  /// Saves the mapped farm to the backend.
-  /// Returns true on success, throws an exception with message on failure.
+  // ─── REGISTER ────────────────────────────────────────────
+  static Future<Map<String, dynamic>> register({
+    required String email,
+    required String fullName,
+    required String password,
+    required String phone,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/auth/register');
+
+    final body = jsonEncode({
+      'email': email,
+      'full_name': fullName,
+      'password': password,
+      'phone': phone,
+      'role': 'FARMER',   // farmers always register as FARMER
+    });
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      ).timeout(const Duration(seconds: 15));
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return data; // { user: {...}, tokens: { access_token, refresh_token } }
+      } else {
+        throw Exception(data['detail'] ?? 'Registration failed');
+      }
+    } catch (e) {
+      throw Exception('Register error: $e');
+    }
+  }
+
+  // ─── LOGIN ───────────────────────────────────────────────
+  static Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/auth/login');
+
+    final body = jsonEncode({
+      'email': email,
+      'password': password,
+      'role': 'FARMER',
+    });
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      ).timeout(const Duration(seconds: 15));
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data; // { user: { id, full_name, email, role }, tokens: {...} }
+      } else {
+        throw Exception(data['detail'] ?? 'Login failed');
+      }
+    } catch (e) {
+      throw Exception('Login error: $e');
+    }
+  }
+
+  // ─── SAVE FARM ───────────────────────────────────────────
   static Future<Map<String, dynamic>> saveFarm({
     required int farmerId,
+    required String accessToken,       // ← now uses real JWT
     required List<LatLng> points,
     required String farmName,
     required String cropType,
@@ -17,7 +85,6 @@ class ApiService {
   }) async {
     final uri = Uri.parse('$_baseUrl/farmer/save-farm');
 
-    // Convert LatLng list to list of {lat, lng} maps
     final boundaryPoints = points
         .map((p) => {'lat': p.latitude, 'lng': p.longitude})
         .toList();
@@ -33,14 +100,17 @@ class ApiService {
     try {
       final response = await http.post(
         uri,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $accessToken', // ← real JWT token
+        },
         body: body,
       ).timeout(const Duration(seconds: 15));
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return data; // success — contains farm_id, area_acres, etc.
+        return data;
       } else {
         throw Exception(data['detail'] ?? 'Failed to save farm');
       }
