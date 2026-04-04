@@ -3,8 +3,14 @@ import 'map_screen.dart';
 
 class FarmerHomeScreen extends StatelessWidget {
   final String farmerId;
+  final String farmerName;
+  final String accessToken;
 
-  const FarmerHomeScreen({super.key, required this.farmerId});
+  const FarmerHomeScreen({
+    super.key,
+    required this.farmerId,
+    required this.farmerName,
+    required this.accessToken,});
 
   @override
   Widget build(BuildContext context) {
@@ -120,7 +126,10 @@ class FarmerHomeScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MapScreen(farmerId: farmerId),
+                      builder: (_) => MapScreen(
+                        farmerId: farmerId,
+                        farmerName: farmerName,
+                        accessToken: accessToken,),
                     ),
                   );
                 },

@@ -8,8 +8,14 @@ import 'mapped_success_screen.dart';
 
 class MapScreen extends StatefulWidget {
   final String farmerId;
+  final String farmerName;
+  final String accessToken;
 
-  const MapScreen({super.key, required this.farmerId});
+  const MapScreen({
+    super.key,
+    required this.farmerId,
+    required this.farmerName,
+    required this.accessToken, });
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -116,6 +122,7 @@ class _MapScreenState extends State<MapScreen> {
       MaterialPageRoute(
         builder: (_) => MappedSuccessScreen(
           farmerId: widget.farmerId,
+          accessToken: widget.accessToken,
           points: landPoints,
           hectare: areaHectare,
           acre: areaAcre,

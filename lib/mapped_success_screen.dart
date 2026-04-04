@@ -9,11 +9,13 @@ class MappedSuccessScreen extends StatefulWidget {
   final double acre;
   final String crop;
   final String insurance;
-  final String farmName;   // ← ADD this param when calling this screen
+  final String farmName;
+  final String accessToken;// ← ADD this param when calling this screen
 
   const MappedSuccessScreen({
     super.key,
     required this.farmerId,
+    required this.accessToken,
     required this.points,
     required this.hectare,
     required this.acre,
@@ -35,6 +37,7 @@ class _MappedSuccessScreenState extends State<MappedSuccessScreen> {
     try {
       final result = await ApiService.saveFarm(
         farmerId: int.parse(widget.farmerId),
+        accessToken: widget.accessToken,
         points: widget.points,
         farmName: widget.farmName,
         cropType: widget.crop,
