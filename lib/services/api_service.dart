@@ -20,7 +20,7 @@ class ApiService {
       'full_name': fullName,
       'password': password,
       'phone': phone,
-      'role': 'FARMER',   // farmers always register as FARMER
+      'role': 'farmer',   // farmers always register as FARMER
     });
 
     try {
@@ -52,7 +52,7 @@ class ApiService {
     final body = jsonEncode({
       'email': email,
       'password': password,
-      'role': 'FARMER',
+      'role': 'farmer',
     });
 
     try {
